@@ -209,9 +209,11 @@ void connectToServer() {
             FillConsoleOutputAttribute(hStdOut, wOldColorAttrs, csbiInfo.srWindow.Right * 4, wOldPosMouse, &cWrittenChars);
             FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', csbiInfo.srWindow.Right * 4, wOldPosMouse, &cWrittenChars);
             SetConsoleCursorPosition(hStdOut, wOldPosMouse);
-            SetConsoleTextAttribute(hStdOut, 2);
             recv(tcp_sock, buffer, BUFFER_SIZE, 0);
+            SetConsoleTextAttribute(hStdOut, 2);
+            printer(std::string(buffer));
             SetConsoleTextAttribute(hStdOut, wOldColorAttrs);
+            recv(tcp_sock, buffer, BUFFER_SIZE, 0);
             printer(std::string(buffer));
         }
     }
