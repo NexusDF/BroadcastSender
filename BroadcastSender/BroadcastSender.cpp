@@ -109,6 +109,10 @@ public:
     void recvmsg(char* buffer) {
         recv(sock, buffer, buffer_size, 0);
     }
+
+    void recvmsg(char* b, int size) {
+        recv(sock, b, size, 0);
+    }
 private:
     SOCKET sock;
     sockaddr_in other;
@@ -251,6 +255,9 @@ int setSocketTimeout(int time) {
 }
 
 void refresh() {
+    FillConsoleOutputAttribute(hStdOut, wOldColorAttrs, csbiInfo.srWindow.Right * 4, wOldPosMouse, &cWrittenChars);
+    FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', csbiInfo.srWindow.Right * 4, wOldPosMouse, &cWrittenChars);
+    SetConsoleCursorPosition(hStdOut, wOldPosMouse);
     sendto(sock, "R", 2, 0, (sockaddr*)&local_addr, sizeof(local_addr));
     logger.info("Отправил");
     waitAnswer();
@@ -285,19 +292,31 @@ void gameStart() {
             std::cout << "Игра началась\n";
             while (true) {
                 tcp.recvmsg(buffer);
+                if (std::string(buffer) == "END") break;
                 std::cout << buffer << std::endl;
                 showCursor();
                 std::cout << "Введите ответ: ";
                 std::cin >> b;
                 hideCursor();
                 tcp.sendmsg((char*)&b, sizeof(int));
+                ZeroMemory(&buffer, BUFFER_SIZE);
                 tcp.recvmsg(buffer);
+                FillConsoleOutputAttribute(hStdOut, wOldColorAttrs, csbiInfo.srWindow.Right * 4, wOldPosMouse, &cWrittenChars);
+                FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', csbiInfo.srWindow.Right * 4, wOldPosMouse, &cWrittenChars);
+                SetConsoleCursorPosition(hStdOut, wOldPosMouse);
                 logger.success(buffer);
             }
-
+            ZeroMemory(&buffer, BUFFER_SIZE);
+            int score = 0;
+            tcp.recvmsg((char*)&score, sizeof(int));
+            SetConsoleTextAttribute(hStdOut, 3);
+            printf("Ваш счёт: %d", score);
+            SetConsoleTextAttribute(hStdOut, wOldColorAttrs);
+            break;
         }
     }
-    
+    std::cin >> buffer;
+    isConnect = false;
 }
 
 void connectToServer(Logger log) {
